@@ -158,11 +158,7 @@ public:
 //
 // EDIT to change order / floating point type / cuda / 2d/3d
 
-#if CASE == CASE_3D
-using Dim = dim_xyz;
-#else
 using Dim = dim_yz;
-#endif
 
 #if 1
 #ifdef USE_CUDA
