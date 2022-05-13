@@ -124,7 +124,7 @@ void setupParameters()
   // read_checkpoint_filename = "checkpoint_500.bp";
 
   // -- Set some parameters specific to this case
-  g.BB = 0.;
+  g.BB = 1.;
   g.Zi = 1.;
   g.mass_ratio = 100.;
   g.lambda0 = 20.;
@@ -192,6 +192,21 @@ Grid_t* setupGrid()
 }
 
 // ======================================================================
+// initializeAlfven
+
+void initializeAlfven(MfieldsState& mflds)
+{
+  const auto& grid = mflds.grid();
+  double ky = 2. * M_PI / grid.domain.length[1];
+  setupFields(mflds, [&](int m, double crd[3]) {
+    switch (m) {
+      case HY: return g.BB + .1 * sin(ky * crd[1]);
+      default: return 0.;
+    }
+  });
+}
+
+// ======================================================================
 // initializeParticles
 
 void initializeParticles(SetupParticles<Mparticles>& setup_particles,
@@ -221,14 +236,15 @@ void initializeParticles(SetupParticles<Mparticles>& setup_particles,
 // ======================================================================
 // initializeFields
 
-void initializeFields(MfieldsState& mflds)
+void initializeFields(MfieldsState& mflds, MfieldsState& mflds_alfven)
 {
-  setupFields(mflds, [&](int m, double crd[3]) {
-    switch (m) {
-      case HY: return g.BB;
-      default: return 0.;
-    }
-  });
+  setupFieldsIndices(mflds,
+                     [&](int m, int i, int j, int k, int p, double crd[3]) {
+                       switch (m) {
+                         case HY: return double(mflds_alfven(m, i, j, k, p));
+                         default: return 0.;
+                       }
+                     });
 }
 
 // ======================================================================
@@ -334,8 +350,10 @@ void run()
   // setup initial conditions
 
   if (read_checkpoint_filename.empty()) {
+    MfieldsState mflds_alfven(grid);
+    initializeAlfven(mflds_alfven);
     initializeParticles(setup_particles, balance, grid_ptr, mprts);
-    initializeFields(mflds);
+    initializeFields(mflds, mflds_alfven);
   }
 
   // ----------------------------------------------------------------------
