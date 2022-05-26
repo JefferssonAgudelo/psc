@@ -12,6 +12,9 @@
 #include "cuda_bits.h"
 #endif
 
+
+//This is a a comment to see if the git commit is set up properly  
+
 // ======================================================================
 // Particle kinds
 //
